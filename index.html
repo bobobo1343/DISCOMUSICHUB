@@ -1,138 +1,258 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Music Hub</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet" />
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Fancy Music Player</title>
 <style>
   body {
-    font-family: Inter, system-ui, Arial;
-    background: #0b1220;
-    color: #e6eef6;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: #121212;
+    color: #eee;
     margin: 0;
-  }
-  .container {
-    max-width: 1100px;
-    margin: 28px auto;
     padding: 20px;
   }
-  header {
+  #playlist {
+    max-width: 600px;
+    margin: 0 auto 40px;
+  }
+  .song {
     display: flex;
     align-items: center;
-    justify-content: space-between;
-  }
-  select,
-  button {
-    padding: 8px 12px;
+    margin-bottom: 12px;
+    cursor: pointer;
+    padding: 6px;
     border-radius: 8px;
-    border: none;
+    transition: background 0.2s;
   }
-  .card {
-    background: #071827;
-    padding: 14px;
+  .song:hover {
+    background: #222;
+  }
+  .artwork {
+    width: 60px;
+    height: 60px;
+    object-fit: cover;
+    border-radius: 6px;
+    margin-right: 15px;
+    background: #333;
+  }
+  .title {
+    flex-grow: 1;
+    font-size: 1rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  #player-controls {
+    max-width: 600px;
+    margin: 0 auto;
+    background: #222;
+    padding: 20px;
     border-radius: 12px;
-  }
-  .muted {
-    color: #94a3b8;
-    font-size: 13px;
-    margin-bottom: 10px;
-  }
-  .track {
-    display: flex;
-    justify-content: space-between;
-    padding: 10px;
-    border-radius: 8px;
-    margin-bottom: 8px;
-    background: #081425;
-  }
-  .track .meta {
     display: flex;
     flex-direction: column;
+    gap: 12px;
   }
-  audio {
+  #player-controls button {
+    background: none;
+    border: none;
+    color: #eee;
+    font-size: 1.3rem;
+    cursor: pointer;
+  }
+  #progress-container {
     width: 100%;
-    margin-top: 12px;
+    height: 8px;
+    background: #333;
+    border-radius: 6px;
+    cursor: pointer;
+    position: relative;
+  }
+  #progress {
+    height: 100%;
+    width: 0;
+    background: #1db954;
+    border-radius: 6px;
+  }
+  #time {
+    font-size: 0.8rem;
+    text-align: right;
+    color: #bbb;
   }
 </style>
 </head>
 <body>
-  <div class="container">
-    <header>
-      <h1>Music Hub</h1>
-      <div>
-        <select id="artistSelect">
-          <option value="carti.json">Playboi Carti</option>
-          <option value="ken.json">Ken Carson</option>
-          <option value="lone.json">destroy lonely</option>
-        </select>
-        <button id="refreshBtn">Refresh JSON</button>
-      </div>
-    </header>
-    <main class="card">
-      <div class="muted" id="currentPath">All tracks</div>
-      <div id="tracks"></div>
-      <audio id="audio" controls preload="none"></audio>
-    </main>
+
+<h1>Fancy Music Player</h1>
+
+<div>
+  <label for="playlist-select">Choose Playlist:</label>
+  <select id="playlist-select">
+    <option value="carti.json">Playboi Carti</option>
+    <option value="ken.json">Ken Carson</option>
+    <option value="lone.json">Destroy Lonely</option>
+  </select>
+</div>
+
+<div id="playlist"></div>
+
+<div id="player-controls" style="display:none;">
+  <img id="current-artwork" src="" alt="Artwork" style="width:150px; height:150px; border-radius:12px; margin: 0 auto 10px; display:block;" />
+  <div id="current-title" style="text-align:center; font-weight:bold; font-size:1.2rem; margin-bottom:10px;"></div>
+
+  <div style="display:flex; justify-content:center; gap: 30px;">
+    <button id="prev-btn">&#9664;&#9664;</button>
+    <button id="play-pause-btn">&#9654;</button>
+    <button id="next-btn">&#9654;&#9654;</button>
   </div>
 
-  <script>
-    const artistSelect = document.getElementById('artistSelect');
-    const tracksEl = document.getElementById('tracks');
-    const audio = document.getElementById('audio');
-    const currentPathEl = document.getElementById('currentPath');
+  <div id="progress-container">
+    <div id="progress"></div>
+  </div>
+  <div id="time">00:00 / 00:00</div>
+</div>
 
-    let allTracks = [];
+<audio id="audio" preload="metadata"></audio>
 
-    async function loadJSON(name) {
-      const res = await fetch(name, { cache: 'no-store' });
-      if (!res.ok) {
-        tracksEl.innerHTML = '<div class="muted">Failed to load playlist.</div>';
-        return;
-      }
-      allTracks = await res.json();
-      renderList(allTracks);
-    }
+<script>
+const playlistSelect = document.getElementById('playlist-select');
+const playlistDiv = document.getElementById('playlist');
+const audio = document.getElementById('audio');
+const playPauseBtn = document.getElementById('play-pause-btn');
+const prevBtn = document.getElementById('prev-btn');
+const nextBtn = document.getElementById('next-btn');
+const currentTitle = document.getElementById('current-title');
+const currentArtwork = document.getElementById('current-artwork');
+const playerControls = document.getElementById('player-controls');
+const progress = document.getElementById('progress');
+const progressContainer = document.getElementById('progress-container');
+const timeDisplay = document.getElementById('time');
 
-    function renderList(tracks) {
-      tracksEl.innerHTML = '';
-      if (!tracks.length) {
-        tracksEl.innerHTML = '<div class="muted">No tracks yet.</div>';
-        return;
-      }
-      const groups = {};
-      tracks.forEach(t => {
-        const path = t.path || 'root';
-        if (!groups[path]) groups[path] = [];
-        groups[path].push(t);
-      });
-      for (const path of Object.keys(groups)) {
-        const h = document.createElement('div');
-        h.textContent = path === 'root' ? 'Root' : path;
-        h.style.fontWeight = '700';
-        h.style.marginTop = '8px';
-        tracksEl.appendChild(h);
-        groups[path].forEach(t => {
-          const div = document.createElement('div');
-          div.className = 'track';
-          div.innerHTML = `<div class="meta"><div class="title">${t.title}</div><div class="muted">${t.mimeType || ''}</div></div><div><button>Play</button></div>`;
-          div.querySelector('button').addEventListener('click', () => {
-            audio.src = t.url;
-            audio.play().catch(e => {
-              alert('Playback blocked or failed. Try opening the file directly in a new tab.');
-              console.error(e);
-            });
-            currentPathEl.textContent = t.path || 'root';
-          });
-          tracksEl.appendChild(div);
-        });
-      }
-    }
+let tracks = [];
+let currentIndex = 0;
+let isPlaying = false;
 
-    artistSelect.addEventListener('change', () => loadJSON(artistSelect.value));
-    document.getElementById('refreshBtn').addEventListener('click', () => loadJSON(artistSelect.value));
+function formatTime(seconds) {
+  const mins = Math.floor(seconds / 60) || 0;
+  const secs = Math.floor(seconds % 60) || 0;
+  return `${mins < 10 ? '0'+mins : mins}:${secs < 10 ? '0'+secs : secs}`;
+}
 
-    loadJSON('carti.json');
-  </script>
+function loadPlaylist(filename) {
+  fetch(filename)
+    .then(res => res.json())
+    .then(data => {
+      tracks = data;
+      currentIndex = 0;
+      renderPlaylist();
+      loadTrack(currentIndex);
+      playerControls.style.display = 'block';
+    })
+    .catch(e => {
+      console.error('Failed to load playlist:', e);
+      playlistDiv.innerHTML = '<p style="color:#f00;">Failed to load playlist</p>';
+      playerControls.style.display = 'none';
+    });
+}
+
+function renderPlaylist() {
+  playlistDiv.innerHTML = '';
+  tracks.forEach((track, i) => {
+    const div = document.createElement('div');
+    div.classList.add('song');
+    if(i === currentIndex) div.style.background = '#1db954';
+
+    const img = document.createElement('img');
+    img.classList.add('artwork');
+    img.src = track.artwork;
+    img.alt = track.title;
+
+    const title = document.createElement('div');
+    title.classList.add('title');
+    title.textContent = track.title;
+
+    div.appendChild(img);
+    div.appendChild(title);
+
+    div.addEventListener('click', () => {
+      currentIndex = i;
+      loadTrack(i);
+      playAudio();
+      renderPlaylist();
+    });
+
+    playlistDiv.appendChild(div);
+  });
+}
+
+function loadTrack(index) {
+  const track = tracks[index];
+  audio.src = track.url;
+  currentTitle.textContent = track.title;
+  currentArtwork.src = track.artwork;
+  updateTimeDisplay(0, 0);
+}
+
+function playAudio() {
+  audio.play();
+  isPlaying = true;
+  playPauseBtn.textContent = '⏸';
+}
+
+function pauseAudio() {
+  audio.pause();
+  isPlaying = false;
+  playPauseBtn.textContent = '▶';
+}
+
+playPauseBtn.addEventListener('click', () => {
+  if(isPlaying) pauseAudio();
+  else playAudio();
+});
+
+prevBtn.addEventListener('click', () => {
+  currentIndex = (currentIndex - 1 + tracks.length) % tracks.length;
+  loadTrack(currentIndex);
+  playAudio();
+  renderPlaylist();
+});
+
+nextBtn.addEventListener('click', () => {
+  currentIndex = (currentIndex + 1) % tracks.length;
+  loadTrack(currentIndex);
+  playAudio();
+  renderPlaylist();
+});
+
+audio.addEventListener('timeupdate', () => {
+  const progressPercent = (audio.currentTime / audio.duration) * 100 || 0;
+  progress.style.width = progressPercent + '%';
+  updateTimeDisplay(audio.currentTime, audio.duration);
+});
+
+progressContainer.addEventListener('click', (e) => {
+  const rect = progressContainer.getBoundingClientRect();
+  const clickX = e.clientX - rect.left;
+  const width = rect.width;
+  const newTime = (clickX / width) * audio.duration;
+  audio.currentTime = newTime;
+});
+
+audio.addEventListener('ended', () => {
+  nextBtn.click();
+});
+
+function updateTimeDisplay(current, duration) {
+  timeDisplay.textContent = `${formatTime(current)} / ${formatTime(duration)}`;
+}
+
+playlistSelect.addEventListener('change', () => {
+  loadPlaylist(playlistSelect.value);
+});
+
+// Load default playlist at start
+loadPlaylist(playlistSelect.value);
+</script>
+
 </body>
 </html>
