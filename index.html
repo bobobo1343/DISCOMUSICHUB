@@ -1,258 +1,96 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Fancy Music Player</title>
-<style>
-  body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background: #121212;
-    color: #eee;
-    margin: 0;
-    padding: 20px;
-  }
-  #playlist {
-    max-width: 600px;
-    margin: 0 auto 40px;
-  }
-  .song {
-    display: flex;
-    align-items: center;
-    margin-bottom: 12px;
-    cursor: pointer;
-    padding: 6px;
-    border-radius: 8px;
-    transition: background 0.2s;
-  }
-  .song:hover {
-    background: #222;
-  }
-  .artwork {
-    width: 60px;
-    height: 60px;
-    object-fit: cover;
-    border-radius: 6px;
-    margin-right: 15px;
-    background: #333;
-  }
-  .title {
-    flex-grow: 1;
-    font-size: 1rem;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-  #player-controls {
-    max-width: 600px;
-    margin: 0 auto;
-    background: #222;
-    padding: 20px;
-    border-radius: 12px;
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-  }
-  #player-controls button {
-    background: none;
-    border: none;
-    color: #eee;
-    font-size: 1.3rem;
-    cursor: pointer;
-  }
-  #progress-container {
-    width: 100%;
-    height: 8px;
-    background: #333;
-    border-radius: 6px;
-    cursor: pointer;
-    position: relative;
-  }
-  #progress {
-    height: 100%;
-    width: 0;
-    background: #1db954;
-    border-radius: 6px;
-  }
-  #time {
-    font-size: 0.8rem;
-    text-align: right;
-    color: #bbb;
-  }
-</style>
+  <meta charset="UTF-8" />
+  <title>My Music Player</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+      background: #121212;
+      color: #eee;
+    }
+    #artists, #songs {
+      margin-bottom: 20px;
+    }
+    #artists button {
+      margin: 5px;
+      padding: 8px 12px;
+      background: #1db954;
+      border: none;
+      border-radius: 4px;
+      color: white;
+      cursor: pointer;
+    }
+    #artists button.active {
+      background: #1ed760;
+      font-weight: bold;
+    }
+    #songs table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    #songs th, #songs td {
+      padding: 8px;
+      border-bottom: 1px solid #333;
+    }
+    #songs tr.playing {
+      background: #333;
+    }
+    #player {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+    #player img {
+      width: 100px;
+      height: 100px;
+      object-fit: cover;
+      border-radius: 8px;
+      box-shadow: 0 0 10px #1db954;
+    }
+    #player .info {
+      flex-grow: 1;
+    }
+    #player button {
+      font-size: 30px;
+      background: none;
+      border: none;
+      color: #1db954;
+      cursor: pointer;
+    }
+  </style>
 </head>
 <body>
 
-<h1>Fancy Music Player</h1>
+  <h1>My Music Player</h1>
 
-<div>
-  <label for="playlist-select">Choose Playlist:</label>
-  <select id="playlist-select">
-    <option value="carti.json">Playboi Carti</option>
-    <option value="ken.json">Ken Carson</option>
-    <option value="lone.json">Destroy Lonely</option>
-  </select>
-</div>
-
-<div id="playlist"></div>
-
-<div id="player-controls" style="display:none;">
-  <img id="current-artwork" src="" alt="Artwork" style="width:150px; height:150px; border-radius:12px; margin: 0 auto 10px; display:block;" />
-  <div id="current-title" style="text-align:center; font-weight:bold; font-size:1.2rem; margin-bottom:10px;"></div>
-
-  <div style="display:flex; justify-content:center; gap: 30px;">
-    <button id="prev-btn">&#9664;&#9664;</button>
-    <button id="play-pause-btn">&#9654;</button>
-    <button id="next-btn">&#9654;&#9654;</button>
+  <div id="artists">
+    <h2>Artists</h2>
+    <!-- Artist buttons will go here -->
   </div>
 
-  <div id="progress-container">
-    <div id="progress"></div>
+  <div id="songs">
+    <h2>Songs</h2>
+    <table>
+      <thead>
+        <tr><th>#</th><th>Title</th><th>Play</th></tr>
+      </thead>
+      <tbody id="song-list">
+        <!-- Songs will appear here -->
+      </tbody>
+    </table>
   </div>
-  <div id="time">00:00 / 00:00</div>
-</div>
 
-<audio id="audio" preload="metadata"></audio>
+  <div id="player">
+    <img id="artwork" src="" alt="Artwork" />
+    <div class="info">
+      <div id="now-playing">Select a song to play</div>
+    </div>
+    <button id="play-pause">▶️</button>
+  </div>
 
-<script>
-const playlistSelect = document.getElementById('playlist-select');
-const playlistDiv = document.getElementById('playlist');
-const audio = document.getElementById('audio');
-const playPauseBtn = document.getElementById('play-pause-btn');
-const prevBtn = document.getElementById('prev-btn');
-const nextBtn = document.getElementById('next-btn');
-const currentTitle = document.getElementById('current-title');
-const currentArtwork = document.getElementById('current-artwork');
-const playerControls = document.getElementById('player-controls');
-const progress = document.getElementById('progress');
-const progressContainer = document.getElementById('progress-container');
-const timeDisplay = document.getElementById('time');
-
-let tracks = [];
-let currentIndex = 0;
-let isPlaying = false;
-
-function formatTime(seconds) {
-  const mins = Math.floor(seconds / 60) || 0;
-  const secs = Math.floor(seconds % 60) || 0;
-  return `${mins < 10 ? '0'+mins : mins}:${secs < 10 ? '0'+secs : secs}`;
-}
-
-function loadPlaylist(filename) {
-  fetch(filename)
-    .then(res => res.json())
-    .then(data => {
-      tracks = data;
-      currentIndex = 0;
-      renderPlaylist();
-      loadTrack(currentIndex);
-      playerControls.style.display = 'block';
-    })
-    .catch(e => {
-      console.error('Failed to load playlist:', e);
-      playlistDiv.innerHTML = '<p style="color:#f00;">Failed to load playlist</p>';
-      playerControls.style.display = 'none';
-    });
-}
-
-function renderPlaylist() {
-  playlistDiv.innerHTML = '';
-  tracks.forEach((track, i) => {
-    const div = document.createElement('div');
-    div.classList.add('song');
-    if(i === currentIndex) div.style.background = '#1db954';
-
-    const img = document.createElement('img');
-    img.classList.add('artwork');
-    img.src = track.artwork;
-    img.alt = track.title;
-
-    const title = document.createElement('div');
-    title.classList.add('title');
-    title.textContent = track.title;
-
-    div.appendChild(img);
-    div.appendChild(title);
-
-    div.addEventListener('click', () => {
-      currentIndex = i;
-      loadTrack(i);
-      playAudio();
-      renderPlaylist();
-    });
-
-    playlistDiv.appendChild(div);
-  });
-}
-
-function loadTrack(index) {
-  const track = tracks[index];
-  audio.src = track.url;
-  currentTitle.textContent = track.title;
-  currentArtwork.src = track.artwork;
-  updateTimeDisplay(0, 0);
-}
-
-function playAudio() {
-  audio.play();
-  isPlaying = true;
-  playPauseBtn.textContent = '⏸';
-}
-
-function pauseAudio() {
-  audio.pause();
-  isPlaying = false;
-  playPauseBtn.textContent = '▶';
-}
-
-playPauseBtn.addEventListener('click', () => {
-  if(isPlaying) pauseAudio();
-  else playAudio();
-});
-
-prevBtn.addEventListener('click', () => {
-  currentIndex = (currentIndex - 1 + tracks.length) % tracks.length;
-  loadTrack(currentIndex);
-  playAudio();
-  renderPlaylist();
-});
-
-nextBtn.addEventListener('click', () => {
-  currentIndex = (currentIndex + 1) % tracks.length;
-  loadTrack(currentIndex);
-  playAudio();
-  renderPlaylist();
-});
-
-audio.addEventListener('timeupdate', () => {
-  const progressPercent = (audio.currentTime / audio.duration) * 100 || 0;
-  progress.style.width = progressPercent + '%';
-  updateTimeDisplay(audio.currentTime, audio.duration);
-});
-
-progressContainer.addEventListener('click', (e) => {
-  const rect = progressContainer.getBoundingClientRect();
-  const clickX = e.clientX - rect.left;
-  const width = rect.width;
-  const newTime = (clickX / width) * audio.duration;
-  audio.currentTime = newTime;
-});
-
-audio.addEventListener('ended', () => {
-  nextBtn.click();
-});
-
-function updateTimeDisplay(current, duration) {
-  timeDisplay.textContent = `${formatTime(current)} / ${formatTime(duration)}`;
-}
-
-playlistSelect.addEventListener('change', () => {
-  loadPlaylist(playlistSelect.value);
-});
-
-// Load default playlist at start
-loadPlaylist(playlistSelect.value);
-</script>
+<script src="app.js"></script>
 
 </body>
 </html>
