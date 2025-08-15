@@ -60,6 +60,7 @@
 let playlist = [], currentSongs = [], currentIndex = 0;
 let audio = new Audio();
 let shuffleMode=false, repeatMode=false;
+const defaultArtwork = 'https://raw.githubusercontent.com/bobobo1343/ARTWORK/main/default%20(2).jpg';
 
 // Load playlist.json from GitHub
 fetch('https://raw.githubusercontent.com/bobobo1343/DISCOMUSICHUB/main/playlist.json')
@@ -111,13 +112,23 @@ function loadSongs(songsArr){
   playSong(0);
 }
 
+// Generate artwork URL based on GitHub folder
+function getArtworkUrl(songTitle){
+  let filename = songTitle.split('/').pop().replace(/ /g,'%20') + '.jpg';
+  return `https://raw.githubusercontent.com/bobobo1343/ARTWORK/main/PLAYBOICARTI/${filename}`;
+}
+
 // Play selected song
 function playSong(idx){
   currentIndex=idx;
   let song=currentSongs[currentIndex];
   audio.src=song.url;
-  audio.play();
-  document.getElementById('artwork').src = song.artwork || 'https://raw.githubusercontent.com/bobobo1343/ARTWORK/main/default%20(2).jpg';
+  audio.play().catch(()=>{}); // ignore autoplay block
+  // Try artwork from GitHub
+  let img = new Image();
+  img.onload = ()=> document.getElementById('artwork').src = getArtworkUrl(song.title);
+  img.onerror = ()=> document.getElementById('artwork').src = defaultArtwork;
+  img.src = getArtworkUrl(song.title);
   highlightPlaying();
 }
 
