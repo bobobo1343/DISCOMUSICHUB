@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <title>Carti Player</title>
 <style>
-/* iTunes style layout */
+/* iTunes/Spotify style layout without artwork */
 body {margin:0;font-family:Arial,sans-serif;background:#111;color:#fff;}
 .player-container {display:flex;height:calc(100vh-80px);}
 .sidebar {width:250px;background:#1a1a1a;padding:20px;overflow-y:auto;}
@@ -50,16 +50,18 @@ let playlist=[], currentSongs=[], currentIndex=0;
 let audio = new Audio();
 let shuffleMode=false, repeatMode=false;
 
+// Fetch playlist JSON from GitHub
 fetch('https://raw.githubusercontent.com/bobobo1343/DISCOMUSICHUB/main/playlist.json')
 .then(res=>res.json())
 .then(data=>{
-  playlist = data['Carti'];
+  playlist = data['Carti']; // Change key if needed for other artists
   generateEras(playlist);
   let firstEra=Object.keys(groupByEra(playlist))[0];
   loadSongs(groupByEra(playlist)[firstEra]);
 })
 .catch(err=>alert('Error loading playlist: '+err));
 
+// Group songs by era
 function groupByEra(songs){
   let eras={};
   songs.forEach(s=>{
@@ -70,6 +72,7 @@ function groupByEra(songs){
   return eras;
 }
 
+// Generate sidebar era buttons
 function generateEras(songs){
   const erasDiv=document.getElementById('eras');
   erasDiv.innerHTML='';
@@ -82,6 +85,7 @@ function generateEras(songs){
   }
 }
 
+// Load songs into playlist
 function loadSongs(songsArr){
   currentSongs=songsArr;
   const playlistEl=document.getElementById('playlist');
@@ -95,20 +99,23 @@ function loadSongs(songsArr){
   playSong(0);
 }
 
+// Play selected song
 function playSong(idx){
   currentIndex=idx;
   let song=currentSongs[currentIndex];
   audio.src=song.url; 
-  audio.play().catch(()=>{});
+  audio.play().catch(()=>{}); 
   highlightPlaying();
 }
 
+// Highlight currently playing song
 function highlightPlaying(){
   document.querySelectorAll('#playlist li').forEach((li,i)=>{
     li.style.background=(i===currentIndex)?'#555':'';
   });
 }
 
+// Control buttons
 document.getElementById('play').onclick=()=>audio.paused?audio.play():audio.pause();
 document.getElementById('next').onclick=()=>nextSong();
 document.getElementById('prev').onclick=()=>prevSong();
@@ -117,28 +124,31 @@ document.getElementById('repeat').onclick=()=>repeatMode=!repeatMode;
 document.getElementById('seek').oninput=(e)=>audio.currentTime=e.target.value;
 document.getElementById('volume').oninput=(e)=>audio.volume=e.target.value;
 
+// Update playback bar
 audio.ontimeupdate=()=>{
   document.getElementById('current-time').textContent=formatTime(audio.currentTime);
   document.getElementById('seek').value=audio.currentTime;
   document.getElementById('duration').textContent=formatTime(audio.duration||0);
 };
 
+// Song ended
 audio.onended=()=>{
   if(repeatMode) playSong(currentIndex);
   else nextSong();
 };
 
+// Next/prev song logic
 function nextSong(){
   if(shuffleMode) currentIndex=Math.floor(Math.random()*currentSongs.length);
   else currentIndex=(currentIndex+1)%currentSongs.length;
   playSong(currentIndex);
 }
-
 function prevSong(){
   currentIndex=(currentIndex-1+currentSongs.length)%currentSongs.length;
   playSong(currentIndex);
 }
 
+// Format time display
 function formatTime(sec){
   let m=Math.floor(sec/60), s=Math.floor(sec%60);
   return `${m}:${s<10?'0'+s:s}`;
