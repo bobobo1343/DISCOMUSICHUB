@@ -4,37 +4,43 @@
 <meta charset="UTF-8">
 <title>Carti Player</title>
 <style>
-/* iTunes style layout */
-body {margin:0;font-family:Arial,sans-serif;background:#111;color:#fff;}
-.player-container {display:flex;height:calc(100vh-80px);}
+body {margin:0;font-family:Arial,sans-serif;background:#121212;color:#fff;}
+header {height:60px;background:#1f1f1f;display:flex;align-items:center;padding:0 20px;gap:10px;}
+header h1{flex:1;font-size:22px;}
+.player-container {display:flex;height:calc(100vh-60px);}
 .sidebar {width:250px;background:#1a1a1a;padding:20px;overflow-y:auto;}
 .sidebar h2{text-align:center;margin-top:0;}
-.eras button{width:100%;margin:5px 0;padding:10px;background:#222;border:none;color:#fff;cursor:pointer;text-align:left;}
+.eras button{width:100%;margin:5px 0;padding:10px;background:#222;border:none;color:#fff;cursor:pointer;text-align:left;font-size:14px;}
 .eras button:hover{background:#333;}
 .playlist-container{flex:1;overflow-y:auto;padding:20px;}
-.playlist-container ul{list-style:none;padding:0;}
-.playlist-container li{padding:8px;cursor:pointer;}
+.playlist-container ul{list-style:none;padding:0;margin:0;}
+.playlist-container li{padding:10px;cursor:pointer;border-bottom:1px solid #222;}
 .playlist-container li:hover{background:#333;}
-.artwork-container{width:300px;display:flex;align-items:center;justify-content:center;background:#1a1a1a;padding:20px;position:sticky;top:0;}
+.playlist-container li.playing{background:#444;}
+.artwork-container{width:250px;display:flex;align-items:center;justify-content:center;background:#1a1a1a;padding:20px;position:sticky;top:0;}
 .artwork-container img{max-width:100%;border-radius:10px;}
 .playback-bar{height:80px;background:#222;display:flex;align-items:center;padding:0 20px;gap:10px;flex-wrap:wrap;}
-.playback-bar input[type=range]{flex:1;}
-button{background:#222;color:#fff;border:none;padding:5px 10px;cursor:pointer;border-radius:5px;}
+button{background:#222;color:#fff;border:none;padding:8px 12px;cursor:pointer;border-radius:5px;}
 button:hover{background:#333;}
+input[type=range]{flex:1;}
 </style>
 </head>
 <body>
 
+<header>
+  <h1>Playboi Carti</h1>
+</header>
+
 <div class="player-container">
   <div class="sidebar">
-    <h2>Playboi Carti</h2>
+    <h2>Default Artwork</h2>
     <div class="eras" id="eras"></div>
   </div>
   <div class="playlist-container">
     <ul id="playlist"></ul>
   </div>
   <div class="artwork-container">
-    <img id="artwork" src="https://raw.githubusercontent.com/bobobo1343/ARTWORK/main/default%20(2).jpg" alt="Artwork">
+    <img src="https://raw.githubusercontent.com/bobobo1343/ARTWORK/main/default%20(2).jpg" alt="Carti Artwork">
   </div>
 </div>
 
@@ -51,21 +57,18 @@ button:hover{background:#333;}
 </div>
 
 <script>
-let playlist=[], currentSongs=[], currentIndex=0;
+// Example playlist (replace with your full playlist)
+let playlist = [
+  {title:"Die Lit V1/RIP Peep", url:"https://drive.google.com/uc?id=FILE_ID_1"},
+  {title:"Die Lit V1/Still Kickin'", url:"https://drive.google.com/uc?id=FILE_ID_2"},
+  {title:"Whole Lotta Red/Control", url:"https://drive.google.com/uc?id=FILE_ID_3"}
+];
+
+let currentSongs=[], currentIndex=0;
 let audio = new Audio();
 let shuffleMode=false, repeatMode=false;
-const defaultArtwork='https://raw.githubusercontent.com/bobobo1343/ARTWORK/main/default%20(2).jpg';
 
-fetch('https://raw.githubusercontent.com/bobobo1343/DISCOMUSICHUB/main/playlist.json')
-.then(res=>res.json())
-.then(data=>{
-  playlist = data['Carti'];
-  generateEras(playlist);
-  let firstEra=Object.keys(groupByEra(playlist))[0];
-  loadSongs(groupByEra(playlist)[firstEra]);
-})
-.catch(err=>alert('Error loading playlist: '+err));
-
+// Group songs by era/subfolder
 function groupByEra(songs){
   let eras={};
   songs.forEach(s=>{
@@ -76,6 +79,7 @@ function groupByEra(songs){
   return eras;
 }
 
+// Generate eras in sidebar
 function generateEras(songs){
   const erasDiv=document.getElementById('eras');
   erasDiv.innerHTML='';
@@ -88,6 +92,7 @@ function generateEras(songs){
   }
 }
 
+// Load songs into playlist
 function loadSongs(songsArr){
   currentSongs=songsArr;
   const playlistEl=document.getElementById('playlist');
@@ -101,43 +106,39 @@ function loadSongs(songsArr){
   playSong(0);
 }
 
-function getArtworkUrl(songTitle){
-  let filename=encodeURIComponent(songTitle.split('/').pop())+'.jpg';
-  return `https://raw.githubusercontent.com/bobobo1343/ARTWORK/main/PLAYBOICARTI/${filename}`;
-}
-
+// Play a song
 function playSong(idx){
   currentIndex=idx;
   let song=currentSongs[currentIndex];
-  audio.src=song.url; 
-  audio.play().catch(()=>{}); 
-  let img=new Image();
-  img.onload=()=>document.getElementById('artwork').src=getArtworkUrl(song.title);
-  img.onerror=()=>document.getElementById('artwork').src=defaultArtwork;
-  img.src=getArtworkUrl(song.title);
+  audio.src=song.url;
+  audio.play().catch(()=>{});
   highlightPlaying();
 }
 
+// Highlight current song
 function highlightPlaying(){
   document.querySelectorAll('#playlist li').forEach((li,i)=>{
-    li.style.background=(i===currentIndex)?'#555':'';
+    li.classList.toggle('playing', i===currentIndex);
   });
 }
 
+// Playback controls
 document.getElementById('play').onclick=()=>audio.paused?audio.play():audio.pause();
 document.getElementById('next').onclick=()=>nextSong();
 document.getElementById('prev').onclick=()=>prevSong();
 document.getElementById('shuffle').onclick=()=>shuffleMode=!shuffleMode;
 document.getElementById('repeat').onclick=()=>repeatMode=!repeatMode;
-document.getElementById('seek').oninput=(e)=>audio.currentTime=e.target.value;
-document.getElementById('volume').oninput=(e)=>audio.volume=e.target.value;
+document.getElementById('seek').oninput=e=>audio.currentTime=e.target.value;
+document.getElementById('volume').oninput=e=>audio.volume=e.target.value;
 
+// Update playback bar
 audio.ontimeupdate=()=>{
   document.getElementById('current-time').textContent=formatTime(audio.currentTime);
   document.getElementById('seek').value=audio.currentTime;
   document.getElementById('duration').textContent=formatTime(audio.duration||0);
 };
 
+// Song ended
 audio.onended=()=>{
   if(repeatMode) playSong(currentIndex);
   else nextSong();
@@ -158,6 +159,11 @@ function formatTime(sec){
   let m=Math.floor(sec/60), s=Math.floor(sec%60);
   return `${m}:${s<10?'0'+s:s}`;
 }
+
+// Initialize
+generateEras(playlist);
+let firstEra=Object.keys(groupByEra(playlist))[0];
+loadSongs(groupByEra(playlist)[firstEra]);
 </script>
 
 </body>
