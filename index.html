@@ -6,8 +6,8 @@
 <style>
 body {
   margin: 0;
-  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-  background: #121212;
+  font-family: Arial, sans-serif;
+  background: #111;
   color: #fff;
 }
 header {
@@ -124,7 +124,7 @@ input[type=range] {
     <ul id="playlist"></ul>
   </div>
   <div class="artwork-container">
-    <img src="https://raw.githubusercontent.com/bobobo1343/ARTWORK/main/default%20(2).jpg" alt="Carti Artwork">
+    <img src="https://raw.githubusercontent.com/bobobo1343/ARTWORK/main/default%20(2).jpg" alt="Default Artwork">
   </div>
 </div>
 
@@ -141,17 +141,18 @@ input[type=range] {
 </div>
 
 <script>
+// Playlist example: replace FILE_ID_x with actual Google Drive file IDs or other direct audio URLs
 let playlist = [
   {title:"Die Lit V1/RIP Peep", url:"https://drive.google.com/uc?id=FILE_ID_1"},
   {title:"Die Lit V1/Still Kickin'", url:"https://drive.google.com/uc?id=FILE_ID_2"},
   {title:"Whole Lotta Red/Control", url:"https://drive.google.com/uc?id=FILE_ID_3"}
-  // keep all your songs here
+  // add all your songs here
 ];
+
 let currentSongs=[], currentIndex=0;
 let audio = new Audio();
 let shuffleMode=false, repeatMode=false;
 
-// Group songs by era/subfolder
 function groupByEra(songs){
   let eras={};
   songs.forEach(s=>{
@@ -162,7 +163,6 @@ function groupByEra(songs){
   return eras;
 }
 
-// Generate eras
 function generateEras(songs){
   const erasDiv=document.getElementById('eras');
   erasDiv.innerHTML='';
@@ -175,7 +175,6 @@ function generateEras(songs){
   }
 }
 
-// Load songs
 function loadSongs(songsArr){
   currentSongs=songsArr;
   const playlistEl=document.getElementById('playlist');
@@ -189,16 +188,14 @@ function loadSongs(songsArr){
   playSong(0);
 }
 
-// Play song
 function playSong(idx){
   currentIndex=idx;
   let song=currentSongs[currentIndex];
   audio.src=song.url;
-  audio.play().catch(()=>{});
+  audio.play().catch(()=>{}); // prevent play errors if user hasn't interacted
   highlightPlaying();
 }
 
-// Highlight current
 function highlightPlaying(){
   document.querySelectorAll('#playlist li').forEach((li,i)=>{
     li.classList.toggle('playing', i===currentIndex);
