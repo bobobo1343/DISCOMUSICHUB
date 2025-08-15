@@ -1,959 +1,170 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>DISCOMUSICHUB Ultimate Music Player</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Carti Music Player</title>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap');
-  :root {
-    --bg: #121212;
-    --panel: #181818;
-    --accent: #1db954;
-    --accent-light: #1ed760;
-    --text-primary: #ffffff;
-    --text-muted: #b3b3b3;
-    --shadow: rgba(0,0,0,0.7);
-  }
-  * {
-    box-sizing: border-box;
-  }
-  body {
-    margin: 0; background: var(--bg); color: var(--text-primary);
-    font-family: 'Inter', sans-serif;
-    height: 100vh; display: flex; flex-direction: column;
-  }
-  header {
-    background: var(--accent);
-    padding: 14px 20px;
-    font-weight: 700;
-    font-size: 24px;
-    letter-spacing: 1px;
-    user-select: none;
-    text-align: center;
-  }
-  #topbar {
-    background: var(--panel);
-    display: flex;
-    align-items: center;
-    padding: 10px 20px;
-    gap: 10px;
-    flex-wrap: wrap;
-  }
-  #topbar > * {
-    flex: none;
-  }
-  #topbar .info {
-    font-weight: 600;
-    color: var(--accent);
-    white-space: nowrap;
-  }
-  #topbar button {
-    background: transparent;
-    border: 1.5px solid var(--accent);
-    color: var(--accent);
-    border-radius: 8px;
-    padding: 8px 14px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.3s ease;
-  }
-  #topbar button:hover {
-    background: var(--accent);
-    color: var(--bg);
-  }
-  #topbar input[type=search] {
-    padding: 8px 12px;
-    border-radius: 8px;
-    border: none;
-    background: #2a2a2a;
-    color: var(--text-primary);
-    font-size: 14px;
-    flex-grow: 1;
-    min-width: 180px;
-  }
-  #container {
-    display: grid;
-    grid-template-columns: 300px 1fr 360px;
-    gap: 12px;
-    flex-grow: 1;
-    padding: 16px 20px;
-    overflow: hidden;
-  }
-  /* Folder list */
-  #folder-list {
-    background: var(--panel);
-    border-radius: 12px;
-    overflow-y: auto;
-    display: flex;
-    flex-direction: column;
-  }
-  #folder-search {
-    margin: 12px 16px;
-  }
-  #folder-list ul {
-    list-style: none;
-    padding: 0 16px 16px 16px;
-    margin: 0;
-    overflow-y: auto;
-    flex-grow: 1;
-  }
-  #folder-list li {
-    padding: 10px 14px;
-    border-radius: 8px;
-    cursor: pointer;
-    user-select: none;
-    font-weight: 600;
-    color: var(--text-primary);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    transition: background 0.2s ease;
-  }
-  #folder-list li.folder:hover,
-  #folder-list li.folder.selected {
-    background: var(--accent);
-    color: var(--bg);
-  }
-
-  /* Center grid of songs */
-  #song-list {
-    background: var(--panel);
-    border-radius: 12px;
-    padding: 16px;
-    display: flex;
-    flex-direction: column;
-    overflow-y: auto;
-  }
-  #song-list .header {
-    display: flex;
-    justify-content: space-between;
-    margin-bottom: 16px;
-    font-weight: 700;
-    font-size: 18px;
-    user-select: none;
-  }
-  #songs-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill,minmax(180px,1fr));
-    gap: 14px;
-  }
-  .song-card {
-    background: #222;
-    border-radius: 12px;
-    box-shadow: 0 4px 8px var(--shadow);
-    cursor: pointer;
-    display: flex;
-    flex-direction: column;
-    user-select: none;
-    transition: transform 0.2s ease;
-  }
-  .song-card:hover {
-    transform: translateY(-6px);
-    box-shadow: 0 10px 20px var(--shadow);
-  }
-  .song-thumb {
-    width: 100%;
-    aspect-ratio: 1 / 1;
-    border-top-left-radius: 12px;
-    border-top-right-radius: 12px;
-    overflow: hidden;
-    background: #111;
-  }
-  .song-thumb img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-  }
-  .song-info {
-    padding: 10px 12px;
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-  }
-  .song-title {
-    font-weight: 700;
-    font-size: 14px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-  .song-artist {
-    font-size: 12px;
-    color: var(--text-muted);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  /* Right queue and player */
-  #queue-container {
-    background: var(--panel);
-    border-radius: 12px;
-    display: flex;
-    flex-direction: column;
-    padding: 16px;
-    overflow: hidden;
-  }
-  #queue-header {
-    font-weight: 700;
-    font-size: 18px;
-    user-select: none;
-    margin-bottom: 8px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-  #queue-list {
-    overflow-y: auto;
-    flex-grow: 1;
-  }
-  .queue-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    background: #222;
-    margin-bottom: 8px;
-    padding: 8px 12px;
-    border-radius: 8px;
-    cursor: pointer;
-    user-select: none;
-    transition: background 0.2s ease;
-  }
-  .queue-item:hover {
-    background: var(--accent);
-    color: var(--bg);
-  }
-  .queue-item.selected {
-    background: var(--accent);
-    color: var(--bg);
-  }
-  .queue-item button {
-    background: none;
-    border: none;
-    color: #ff4c4c;
-    font-size: 18px;
-    cursor: pointer;
-  }
-  .queue-item button:hover {
-    color: #ff1a1a;
-  }
-  #player-controls {
-    margin-top: 12px;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-  }
-  #player-artwork {
-    width: 72px;
-    height: 72px;
-    border-radius: 12px;
-    object-fit: cover;
-    background: #111;
-    box-shadow: 0 4px 8px var(--shadow);
-  }
-  #player-info {
-    flex-grow: 1;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    overflow: hidden;
-  }
-  #player-info .title {
-    font-weight: 700;
-    font-size: 16px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-  #player-info .artist {
-    font-size: 13px;
-    color: var(--text-muted);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-  #player-time {
-    font-size: 12px;
-    color: var(--text-muted);
-    margin-top: 4px;
-    user-select: none;
-  }
-  #controls-buttons {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-  #controls-buttons button {
-    background: transparent;
-    border: none;
-    color: var(--text-primary);
-    font-size: 22px;
-    cursor: pointer;
-    user-select: none;
-    padding: 6px 8px;
-    border-radius: 8px;
-    transition: background 0.15s ease;
-  }
-  #controls-buttons button:hover {
-    background: var(--accent);
-  }
-  #progress-container {
-    flex-grow: 1;
-    height: 8px;
-    background: #222;
-    border-radius: 8px;
-    margin-left: 12px;
-    cursor: pointer;
-    position: relative;
-  }
-  #progress-bar {
-    height: 100%;
-    background: linear-gradient(90deg, var(--accent), var(--accent-light));
-    width: 0%;
-    border-radius: 8px;
-    transition: width 0.15s linear;
-  }
-  #volume-control {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    margin-left: 16px;
-  }
-  #volume-slider {
-    width: 100px;
-    cursor: pointer;
-  }
-  #mute-btn {
-    cursor: pointer;
-    background: transparent;
-    border: none;
-    color: var(--text-primary);
-    font-size: 18px;
-    user-select: none;
-  }
-  #status-bar {
-    color: var(--text-muted);
-    font-size: 13px;
-    margin: 6px 20px 10px 20px;
-    user-select: none;
-  }
-  /* Scrollbar styles */
-  #folder-list ul::-webkit-scrollbar,
-  #queue-list::-webkit-scrollbar,
-  #song-list::-webkit-scrollbar {
-    width: 8px;
-  }
-  #folder-list ul::-webkit-scrollbar-thumb,
-  #queue-list::-webkit-scrollbar-thumb,
-  #song-list::-webkit-scrollbar-thumb {
-    background: var(--accent);
-    border-radius: 8px;
-  }
-
-  /* Responsive */
-  @media(max-width: 1000px) {
-    #container {
-      grid-template-columns: 1fr;
-      grid-template-rows: auto 1fr auto;
-      height: auto;
-    }
-    #folder-list {
-      height: 220px;
-      margin-bottom: 12px;
-    }
-    #queue-container {
-      height: 260px;
-      margin-top: 12px;
-    }
-  }
+  body {margin:0;font-family:Arial,sans-serif;background:#111;color:#fff;}
+  .player-container {display:flex;height:calc(100vh - 80px);}
+  .sidebar {width:250px;background:#1a1a1a;padding:20px;overflow-y:auto;}
+  .sidebar h2 {text-align:center;margin-top:0;}
+  .eras button {width:100%;margin:5px 0;padding:10px;background:#222;border:none;color:#fff;cursor:pointer;text-align:left;}
+  .eras button:hover {background:#333;}
+  .playlist-container {flex:1;overflow-y:auto;padding:20px;}
+  .playlist-container ul {list-style:none;padding:0;}
+  .playlist-container li {padding:8px;cursor:pointer;}
+  .playlist-container li:hover {background:#333;}
+  .artwork-container {width:300px;display:flex;align-items:center;justify-content:center;background:#1a1a1a;padding:20px;position:sticky;top:0;}
+  .artwork-container img {max-width:100%;border-radius:10px;}
+  .playback-bar {height:80px;background:#222;display:flex;align-items:center;padding:0 20px;gap:10px;flex-wrap:wrap;}
+  .playback-bar input[type=range]{flex:1;}
+  button {background:#222;color:#fff;border:none;padding:5px 10px;cursor:pointer;border-radius:5px;}
+  button:hover {background:#333;}
 </style>
 </head>
 <body>
 
-<header>DISCOMUSICHUB Ultimate Music Player</header>
+<div class="player-container">
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <h2>Playboi Carti</h2>
+    <div class="eras" id="eras"></div>
+  </div>
 
-<div id="topbar">
-  <div class="info">Streaming: PLAYBOICARTI · KEN CARSON · DESTROY LONELY</div>
-  <button id="btnLoadAll">Load ALL songs</button>
-  <button id="btnRefresh" disabled>Refresh</button>
-  <input id="search" type="search" placeholder="Search songs / folders..." autocomplete="off" />
+  <!-- Playlist -->
+  <div class="playlist-container">
+    <ul id="playlist"></ul>
+  </div>
+
+  <!-- Artwork -->
+  <div class="artwork-container">
+    <img id="artwork" src="https://raw.githubusercontent.com/bobobo1343/ARTWORK/main/default%20(2).jpg" alt="Artwork">
+  </div>
 </div>
 
-<div id="container">
-  <section id="folder-list" aria-label="Artist and Folder Navigation">
-    <input id="folder-search" type="search" placeholder="Filter folders..." autocomplete="off" />
-    <ul></ul>
-  </section>
-
-  <section id="song-list" aria-label="Songs List">
-    <div class="header">
-      <div id="song-count">0 songs</div>
-    </div>
-    <div id="songs-grid" role="list" tabindex="0" aria-live="polite" aria-atomic="true"></div>
-  </section>
-
-  <section id="queue-container" aria-label="Playback Queue and Player">
-    <div id="queue-header">
-      <span>Queue</span>
-      <button id="clear-queue" title="Clear Queue" aria-label="Clear Queue">✖</button>
-    </div>
-    <div id="queue-list" tabindex="0" aria-live="polite" aria-atomic="true"></div>
-
-    <div id="player-controls">
-      <img id="player-artwork" alt="Artwork" src="https://via.placeholder.com/72?text=No+Art" />
-      <div id="player-info">
-        <div class="title" id="player-title">Not playing</div>
-        <div class="artist" id="player-artist"></div>
-        <div id="player-time">0:00 / 0:00</div>
-      </div>
-
-      <div id="controls-buttons">
-        <button id="btnPrev" aria-label="Previous Track" title="Previous">⏮️</button>
-        <button id="btnPlayPause" aria-label="Play/Pause" title="Play/Pause">▶️</button>
-        <button id="btnNext" aria-label="Next Track" title="Next">⏭️</button>
-        <button id="btnShuffle" aria-label="Toggle Shuffle" title="Shuffle">🔀</button>
-        <button id="btnRepeat" aria-label="Toggle Repeat" title="Repeat Off">🔁</button>
-      </div>
-
-      <div id="progress-container" title="Seek">
-        <div id="progress-bar"></div>
-      </div>
-
-      <div id="volume-control" title="Volume">
-        <button id="mute-btn" aria-label="Mute/Unmute">🔊</button>
-        <input type="range" id="volume-slider" min="0" max="1" step="0.01" value="1" />
-      </div>
-    </div>
-  </section>
+<!-- Playback Bar -->
+<div class="playback-bar">
+  <button id="prev">⏮</button>
+  <button id="play">▶️</button>
+  <button id="next">⏭</button>
+  <button id="shuffle">🔀</button>
+  <button id="repeat">🔁</button>
+  <span id="current-time">0:00</span>
+  <input type="range" id="seek" min="0" value="0">
+  <span id="duration">0:00</span>
+  <input type="range" id="volume" min="0" max="1" step="0.01" value="1">
 </div>
-
-<div id="status-bar" role="status" aria-live="polite" aria-atomic="true"></div>
 
 <script>
-(async () => {
-  /* ==== CONFIG ==== */
-  const API_KEY = 'AIzaSyCoNrL7Omej-ct3IlB02OjTMhvtVFmy0b0';
-  const ARTISTS = {
-    'PLAYBOICARTI': '1tgOfvE-l9iBiXtzii8Xkx44U6mOwaItK',
-    'KEN CARSON': '1B3jfYcb7ikY-YiqUWNIFqU9GJd22MeVN',
-    'DESTROY LONELY': '1I0-pM0AbW2mSybBc6HVFuYMyFDQ2nasm'
-  };
-  const METADATA_BASE = 'https://raw.githubusercontent.com/bobobo1343/DISCOMUSICHUB/main/';
-  const METADATA_FILES = ['playboicarti.json','ken_carson.json','destroy_lonely.json'];
+let playlist = [], currentSongs = [], currentIndex = 0;
+let audio = new Audio();
+let shuffleMode=false, repeatMode=false;
 
-  /* ==== DOM refs ==== */
-  const folderSearchInput = document.getElementById('folder-search');
-  const folderList = document.querySelector('#folder-list ul');
-  const searchInput = document.getElementById('search');
-  const btnLoadAll = document.getElementById('btnLoadAll');
-  const btnRefresh = document.getElementById('btnRefresh');
-  const statusBar = document.getElementById('status-bar');
+// Load playlist.json from GitHub
+fetch('https://raw.githubusercontent.com/bobobo1343/DISCOMUSICHUB/main/playlist.json')
+  .then(res => res.json())
+  .then(data => {
+    playlist = data['Carti'];
+    generateEras(playlist);
+    // default: load first era
+    let firstEra = Object.keys(groupByEra(playlist))[0];
+    loadSongs(groupByEra(playlist)[firstEra]);
+  })
+  .catch(err => alert('Error loading playlist: '+err));
 
-  const songsGrid = document.getElementById('songs-grid');
-  const songCount = document.getElementById('song-count');
+// Group songs by era (first folder in title)
+function groupByEra(songs){
+  let eras = {};
+  songs.forEach(s=>{
+    let era = s.title.split('/')[0] || 'Singles';
+    if(!eras[era]) eras[era]=[];
+    eras[era].push(s);
+  });
+  return eras;
+}
 
-  const queueList = document.getElementById('queue-list');
-  const clearQueueBtn = document.getElementById('clear-queue');
-
-  const playerArtwork = document.getElementById('player-artwork');
-  const playerTitle = document.getElementById('player-title');
-  const playerArtist = document.getElementById('player-artist');
-  const playerTime = document.getElementById('player-time');
-
-  const btnPlayPause = document.getElementById('btnPlayPause');
-  const btnPrev = document.getElementById('btnPrev');
-  const btnNext = document.getElementById('btnNext');
-  const btnShuffle = document.getElementById('btnShuffle');
-  const btnRepeat = document.getElementById('btnRepeat');
-
-  const progressContainer = document.getElementById('progress-container');
-  const progressBar = document.getElementById('progress-bar');
-
-  const volumeSlider = document.getElementById('volume-slider');
-  const muteBtn = document.getElementById('mute-btn');
-
-  /* ==== STATE ==== */
-  let metadataMap = {};
-  let allSongs = [];
-  let displayedSongs = [];
-  let folderStructure = []; // Artists with nested folders
-  let queue = [];
-  let playingIndex = -1;
-  let isPlaying = false;
-  let repeatMode = 0; // 0=off,1=one,2=all
-  let shuffleMode = false;
-
-  const audio = new Audio();
-  audio.preload = 'auto';
-
-  const audioExts = ['mp3','m4a','wav','ogg','flac','aac','mka','mp4','webm'];
-
-  function qEncode(s) { return encodeURIComponent(s).replace(/'/g,"%27"); }
-  function escapeHtml(str){return String(str).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));}
-  function formatTime(sec){
-    if(isNaN(sec)) return '0:00';
-    const m = Math.floor(sec/60);
-    const s = Math.floor(sec%60);
-    return m+':'+(s<10?'0':'')+s;
+// Generate sidebar era buttons
+function generateEras(songs){
+  const erasDiv = document.getElementById('eras');
+  erasDiv.innerHTML='';
+  let eras = groupByEra(songs);
+  for(const era in eras){
+    let btn=document.createElement('button');
+    btn.textContent=era;
+    btn.onclick=()=>loadSongs(eras[era]);
+    erasDiv.appendChild(btn);
   }
+}
 
-  // Fetch and parse JSON metadata files
-  async function fetchMetadata(){
-    statusBar.textContent = 'Loading metadata...';
-    metadataMap = {};
-    allSongs = [];
-    for(let file of METADATA_FILES){
-      try {
-        let res = await fetch(METADATA_BASE + file);
-        if(!res.ok) throw new Error('Failed to load '+file);
-        let data = await res.json();
-        for(let song of data){
-          // Normalize keys, store artist from song.artist or from filename fallback
-          if(!song.artist && file.includes('playboicarti')) song.artist = 'PLAYBOICARTI';
-          if(!song.artist && file.includes('ken_carson')) song.artist = 'KEN CARSON';
-          if(!song.artist && file.includes('destroy_lonely')) song.artist = 'DESTROY LONELY';
-          allSongs.push(song);
-        }
-      } catch(e){
-        console.error(e);
-      }
-    }
-    statusBar.textContent = `Loaded metadata for ${allSongs.length} songs`;
-  }
+// Load songs into playlist
+function loadSongs(songsArr){
+  currentSongs = songsArr;
+  const playlistEl = document.getElementById('playlist');
+  playlistEl.innerHTML='';
+  songsArr.forEach((s,idx)=>{
+    let li=document.createElement('li');
+    li.textContent = s.title.split('/').pop();
+    li.onclick=()=>playSong(idx);
+    playlistEl.appendChild(li);
+  });
+  playSong(0);
+}
 
-  // Helper: build folder structure by artist -> eras (subfolders) -> songs
-  function buildFolderStructure(){
-    const artists = {};
-    for(let song of allSongs){
-      if(!song.artist) song.artist = 'Unknown Artist';
-      if(!artists[song.artist]) artists[song.artist] = {};
-      // Use song.folder or parse from url path: e.g. 'artist/era/song.m4a'
-      let era = 'Unknown Era';
-      if(song.url){
-        const parts = song.url.split('/');
-        if(parts.length>1) era = parts[0];
-      }
-      if(!artists[song.artist][era]) artists[song.artist][era] = [];
-      artists[song.artist][era].push(song);
-    }
-    folderStructure = [];
-    for(let artist in artists){
-      const eras = [];
-      for(let era in artists[artist]){
-        eras.push({
-          name: era,
-          songs: artists[artist][era].sort((a,b)=> a.title.localeCompare(b.title))
-        });
-      }
-      eras.sort((a,b) => a.name.localeCompare(b.name));
-      folderStructure.push({artist, eras});
-    }
-    folderStructure.sort((a,b) => a.artist.localeCompare(b.artist));
-  }
+// Play selected song
+function playSong(idx){
+  currentIndex=idx;
+  let song=currentSongs[currentIndex];
+  audio.src=song.url;
+  audio.play();
+  document.getElementById('artwork').src = song.artwork || 'https://raw.githubusercontent.com/bobobo1343/ARTWORK/main/default%20(2).jpg';
+  highlightPlaying();
+}
 
-  // Render folder navigation list (artists and eras)
-  function renderFolders(filter = ''){
-    folderList.innerHTML = '';
-    const ul = document.createElement('ul');
-    for(let artistObj of folderStructure){
-      if(!artistObj.artist.toLowerCase().includes(filter.toLowerCase())) continue;
-      const liArtist = document.createElement('li');
-      liArtist.classList.add('folder');
-      liArtist.textContent = artistObj.artist;
-      liArtist.tabIndex = 0;
-      liArtist.setAttribute('aria-expanded', 'false');
+// Highlight the current song in playlist
+function highlightPlaying(){
+  document.querySelectorAll('#playlist li').forEach((li,i)=>{
+    li.style.background = (i===currentIndex)?'#555':'';
+  });
+}
 
-      const erasUl = document.createElement('ul');
-      erasUl.style.paddingLeft = '16px';
-      erasUl.style.display = 'none';
+// Playback controls
+document.getElementById('play').onclick=()=>audio.paused?audio.play():audio.pause();
+document.getElementById('next').onclick=()=>nextSong();
+document.getElementById('prev').onclick=()=>prevSong();
+document.getElementById('shuffle').onclick=()=>shuffleMode=!shuffleMode;
+document.getElementById('repeat').onclick=()=>repeatMode=!repeatMode;
+document.getElementById('seek').oninput=(e)=>audio.currentTime=e.target.value;
+document.getElementById('volume').oninput=(e)=>audio.volume=e.target.value;
 
-      for(let eraObj of artistObj.eras){
-        if(!eraObj.name.toLowerCase().includes(filter.toLowerCase())) continue;
-        const liEra = document.createElement('li');
-        liEra.classList.add('folder');
-        liEra.textContent = eraObj.name;
-        liEra.tabIndex = 0;
+// Audio events
+audio.ontimeupdate=()=>{
+  document.getElementById('current-time').textContent=formatTime(audio.currentTime);
+  document.getElementById('seek').value=audio.currentTime;
+  document.getElementById('duration').textContent=formatTime(audio.duration||0);
+};
 
-        liEra.onclick = () => {
-          displayedSongs = eraObj.songs;
-          renderSongs(displayedSongs);
-          highlightFolder(liEra);
-        };
-        erasUl.appendChild(liEra);
-      }
+audio.onended=()=>{
+  if(repeatMode) playSong(currentIndex);
+  else nextSong();
+};
 
-      liArtist.onclick = () => {
-        // Toggle expand/collapse eras
-        const expanded = liArtist.getAttribute('aria-expanded') === 'true';
-        liArtist.setAttribute('aria-expanded', !expanded);
-        erasUl.style.display = expanded ? 'none' : 'block';
-      };
+function nextSong(){
+  if(shuffleMode) currentIndex=Math.floor(Math.random()*currentSongs.length);
+  else currentIndex=(currentIndex+1)%currentSongs.length;
+  playSong(currentIndex);
+}
 
-      liArtist.appendChild(erasUl);
-      ul.appendChild(liArtist);
-    }
-    folderList.appendChild(ul);
-  }
+function prevSong(){
+  currentIndex=(currentIndex-1+currentSongs.length)%currentSongs.length;
+  playSong(currentIndex);
+}
 
-  // Highlight currently selected folder
-  function highlightFolder(selectedLi){
-    // Remove all selected
-    const lis = folderList.querySelectorAll('li.selected');
-    lis.forEach(l => l.classList.remove('selected'));
-    selectedLi.classList.add('selected');
-  }
-
-  // Render songs grid from song list
-  function renderSongs(songs){
-    songsGrid.innerHTML = '';
-    songCount.textContent = `${songs.length} song${songs.length!==1?'s':''}`;
-    if(!songs.length){
-      songsGrid.innerHTML = `<p style="color:var(--text-muted);">No songs found.</p>`;
-      return;
-    }
-    for(let song of songs){
-      const card = document.createElement('div');
-      card.className = 'song-card';
-      card.tabIndex = 0;
-      card.setAttribute('role', 'listitem');
-      card.title = `${song.title} — ${song.artist}`;
-
-      const thumb = document.createElement('div');
-      thumb.className = 'song-thumb';
-      const img = document.createElement('img');
-      img.src = song.artwork || 'https://via.placeholder.com/300?text=No+Art';
-      img.alt = `${song.title} artwork`;
-      img.onerror = () => { img.src = 'https://via.placeholder.com/300?text=No+Art'; };
-      thumb.appendChild(img);
-
-      const info = document.createElement('div');
-      info.className = 'song-info';
-      const titleEl = document.createElement('div');
-      titleEl.className = 'song-title';
-      titleEl.textContent = song.title;
-      const artistEl = document.createElement('div');
-      artistEl.className = 'song-artist';
-      artistEl.textContent = song.artist;
-
-      info.appendChild(titleEl);
-      info.appendChild(artistEl);
-
-      card.appendChild(thumb);
-      card.appendChild(info);
-
-      card.onclick = () => {
-        addToQueue(song);
-        playSong(queue.length - 1);
-      };
-
-      songsGrid.appendChild(card);
-    }
-  }
-
-  // Add song to queue if not already present
-  function addToQueue(song){
-    if(queue.find(s => s.url === song.url)) return;
-    queue.push(song);
-    renderQueue();
-  }
-
-  // Render the playback queue
-  function renderQueue(){
-    queueList.innerHTML = '';
-    queue.forEach((song, i) => {
-      const div = document.createElement('div');
-      div.className = 'queue-item';
-      if(i === playingIndex) div.classList.add('selected');
-      div.tabIndex = 0;
-      div.title = `${song.title} — ${song.artist}`;
-      div.textContent = `${song.title} — ${song.artist}`;
-
-      const btnRemove = document.createElement('button');
-      btnRemove.textContent = '✖';
-      btnRemove.title = 'Remove from queue';
-      btnRemove.onclick = (e) => {
-        e.stopPropagation();
-        removeFromQueue(i);
-      };
-      div.appendChild(btnRemove);
-
-      div.onclick = () => {
-        playSong(i);
-      };
-
-      queueList.appendChild(div);
-    });
-  }
-  function removeFromQueue(index){
-    if(index === playingIndex){
-      audio.pause();
-      playingIndex = -1;
-      updatePlayerUI();
-    }
-    queue.splice(index,1);
-    if(playingIndex > index) playingIndex--;
-    renderQueue();
-  }
-
-  // Play a song by queue index
-  function playSong(index){
-    if(index < 0 || index >= queue.length) return;
-    playingIndex = index;
-    const song = queue[playingIndex];
-    audio.src = buildDriveURL(song.url);
-    audio.play().catch(e => console.warn('Play prevented:', e));
-    isPlaying = true;
-    updatePlayerUI();
-    renderQueue();
-  }
-
-  // Build Google Drive direct streamable URL for a file path
-  // NOTE: your Drive folder must be public for this to work
-  // song.url is like: "playboicarti/era/song.m4a"
-  // So we extract folder and filename to get file ID from Drive API
-  async function getFileIdByName(folderId, name) {
-    const url = `https://www.googleapis.com/drive/v3/files?q='${folderId}'+in+parents+and+name='${name}'&key=${API_KEY}&fields=files(id,name,mimeType)`;
-    const res = await fetch(url);
-    if(!res.ok) throw new Error('Failed fetching file id for '+name);
-    const data = await res.json();
-    if(data.files && data.files.length > 0) return data.files[0].id;
-    return null;
-  }
-
-  // Cache folder files for better performance
-  const folderFilesCache = {};
-
-  async function getFileId(folderId, fileName) {
-    if(!folderFilesCache[folderId]) {
-      const url = `https://www.googleapis.com/drive/v3/files?q='${folderId}'+in+parents&key=${API_KEY}&fields=files(id,name)`;
-      const res = await fetch(url);
-      if(!res.ok) throw new Error('Failed fetching files for folder '+folderId);
-      const data = await res.json();
-      folderFilesCache[folderId] = data.files.reduce((acc,f) => {
-        acc[f.name] = f.id;
-        return acc;
-      }, {});
-    }
-    return folderFilesCache[folderId][fileName];
-  }
-
-  // We need a map of folder names to folder IDs for your Drive structure
-  // This example is simplified: we only have artist folders, subfolders (eras), and songs
-  // You'll need to build this map recursively (Drive API v3)
-  // For now, we assume only one folder level (artist folder) with all songs inside.
-  // To get all songs fully you must implement recursive folder reading with API.
-
-  // This function will try to build playable URL from song.url path:
-  // Format example: "playboicarti/era/song.m4a"
-  async function buildDriveURL(songPath) {
-    // parse songPath parts:
-    const parts = songPath.split('/');
-    if(parts.length < 2) {
-      // fallback: just file name under artist folder
-      const artistName = parts[0].toUpperCase().replace(/ /g,'');
-      const artistFolderId = ARTISTS[artistName];
-      const fileName = parts[0];
-      const fileId = await getFileId(artistFolderId, fileName);
-      if(!fileId) return '';
-      return `https://www.googleapis.com/drive/v3/files/${fileId}?alt=media&key=${API_KEY}`;
-    }
-    const artistFolderName = parts[0].toUpperCase().replace(/ /g,'');
-    const eraFolderName = parts[1];
-    const fileName = parts.slice(2).join('/');
-    // For now, since Drive API does not allow easy nested folder search without recursing,
-    // we'll fallback to artist folder search (you can improve it with recursive calls)
-    const artistFolderId = ARTISTS[artistFolderName];
-    if(!artistFolderId) return '';
-
-    // Try to get era folder ID first (optional)
-    // For demo: assume all songs inside artist folder (no era folder)
-    const fileId = await getFileId(artistFolderId, fileName);
-    if(!fileId) {
-      console.warn(`File ID not found for ${fileName} in artist folder ${artistFolderName}`);
-      return '';
-    }
-    return `https://www.googleapis.com/drive/v3/files/${fileId}?alt=media&key=${API_KEY}`;
-  }
-
-  // Queue controls
-  btnPlayPause.onclick = () => {
-    if(isPlaying) audio.pause();
-    else audio.play();
-  };
-  btnNext.onclick = () => {
-    playNext();
-  };
-  btnPrev.onclick = () => {
-    playPrev();
-  };
-  btnShuffle.onclick = () => {
-    shuffleMode = !shuffleMode;
-    btnShuffle.style.color = shuffleMode ? 'var(--accent-light)' : 'var(--text-primary)';
-  };
-  btnRepeat.onclick = () => {
-    repeatMode = (repeatMode + 1) % 3;
-    btnRepeat.title = ['Repeat Off','Repeat One','Repeat All'][repeatMode];
-    btnRepeat.style.color = repeatMode ? 'var(--accent-light)' : 'var(--text-primary)';
-  };
-  clearQueueBtn.onclick = () => {
-    queue = [];
-    playingIndex = -1;
-    audio.pause();
-    updatePlayerUI();
-    renderQueue();
-  };
-
-  audio.onplay = () => {
-    isPlaying = true;
-    btnPlayPause.textContent = '⏸️';
-  };
-  audio.onpause = () => {
-    isPlaying = false;
-    btnPlayPause.textContent = '▶️';
-  };
-  audio.ontimeupdate = () => {
-    if(audio.duration) {
-      const progressPercent = (audio.currentTime / audio.duration) * 100;
-      progressBar.style.width = progressPercent + '%';
-      playerTime.textContent = `${formatTime(audio.currentTime)} / ${formatTime(audio.duration)}`;
-    }
-  };
-  audio.onended = () => {
-    if(repeatMode === 1){
-      audio.currentTime = 0;
-      audio.play();
-    } else {
-      playNext();
-    }
-  };
-
-  progressContainer.onclick = e => {
-    const rect = progressContainer.getBoundingClientRect();
-    const clickX = e.clientX - rect.left;
-    const width = rect.width;
-    if(audio.duration){
-      audio.currentTime = (clickX / width) * audio.duration;
-    }
-  };
-
-  // Volume control
-  volumeSlider.oninput = () => {
-    audio.volume = volumeSlider.value;
-    muteBtn.textContent = audio.volume > 0 ? '🔊' : '🔈';
-  };
-  muteBtn.onclick = () => {
-    if(audio.volume > 0){
-      audio.volume = 0;
-      volumeSlider.value = 0;
-      muteBtn.textContent = '🔈';
-    } else {
-      audio.volume = 1;
-      volumeSlider.value = 1;
-      muteBtn.textContent = '🔊';
-    }
-  };
-  audio.volume = 1;
-
-  // Play next and previous
-  function playNext(){
-    if(shuffleMode){
-      let next;
-      do{
-        next = Math.floor(Math.random()*queue.length);
-      }while(next === playingIndex && queue.length > 1);
-      playSong(next);
-    } else {
-      let next = playingIndex + 1;
-      if(next >= queue.length){
-        if(repeatMode === 2) next = 0;
-        else {
-          audio.pause();
-          return;
-        }
-      }
-      playSong(next);
-    }
-  }
-  function playPrev(){
-    let prev = playingIndex - 1;
-    if(prev < 0) prev = queue.length-1;
-    playSong(prev);
-  }
-
-  // Search functionality
-  function filterSongs(query){
-    query = query.trim().toLowerCase();
-    if(!query){
-      renderSongs(displayedSongs);
-      return;
-    }
-    const filtered = displayedSongs.filter(s =>
-      s.title.toLowerCase().includes(query) || s.artist.toLowerCase().includes(query));
-    renderSongs(filtered);
-  }
-
-  searchInput.oninput = () => filterSongs(searchInput.value);
-  folderSearchInput.oninput = () => renderFolders(folderSearchInput.value);
-
-  // Load all songs into main display and queue
-  btnLoadAll.onclick = async () => {
-    statusBar.textContent = 'Loading metadata...';
-    await fetchMetadata();
-    buildFolderStructure();
-    renderFolders();
-    displayedSongs = allSongs;
-    renderSongs(displayedSongs);
-    statusBar.textContent = 'All songs loaded';
-    btnRefresh.disabled = false;
-  };
-  btnRefresh.onclick = async () => {
-    btnRefresh.disabled = true;
-    await fetchMetadata();
-    buildFolderStructure();
-    renderFolders();
-    displayedSongs = allSongs;
-    renderSongs(displayedSongs);
-    btnRefresh.disabled = false;
-    statusBar.textContent = 'Refreshed metadata';
-  };
-
-  // Update player UI info
-  function updatePlayerUI(){
-    if(playingIndex < 0 || playingIndex >= queue.length){
-      playerTitle.textContent = 'Not playing';
-      playerArtist.textContent = '';
-      playerArtwork.src = 'https://via.placeholder.com/72?text=No+Art';
-      playerTime.textContent = '0:00 / 0:00';
-      btnPlayPause.textContent = '▶️';
-      isPlaying = false;
-      return;
-    }
-    const s = queue[playingIndex];
-    playerTitle.textContent = s.title;
-    playerArtist.textContent = s.artist;
-    playerArtwork.src = s.artwork || 'https://via.placeholder.com/72?text=No+Art';
-  }
-
-  // Keyboard shortcuts: space = play/pause, left = prev, right = next
-  document.body.onkeyup = e => {
-    if(e.target.tagName === 'INPUT') return;
-    switch(e.key){
-      case ' ': btnPlayPause.click(); break;
-      case 'ArrowLeft': btnPrev.click(); break;
-      case 'ArrowRight': btnNext.click(); break;
-    }
-  };
-
-  // INITIAL LOAD
-  await fetchMetadata();
-  buildFolderStructure();
-  renderFolders();
-  displayedSongs = allSongs;
-  renderSongs(displayedSongs);
-  statusBar.textContent = 'Ready';
-
-})();
+function formatTime(sec){
+  let m=Math.floor(sec/60), s=Math.floor(sec%60);
+  return `${m}:${s<10?'0'+s:s}`;
+}
 </script>
+
 </body>
 </html>
